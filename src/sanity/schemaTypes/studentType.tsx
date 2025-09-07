@@ -3,17 +3,17 @@ import { defineField, defineType } from "sanity";
 
 export const studentType = defineType({
   name: "student",
-  title: "Student",
+  title: "Aluno",
   type: "document",
   fields: [
     defineField({
       name: "firstName",
-      title: "First Name",
+      title: "Primeiro Nome",
       type: "string",
     }),
     defineField({
       name: "lastName",
-      title: "Last Name",
+      title: "Sobrenome",
       type: "string",
     }),
     defineField({
@@ -24,13 +24,13 @@ export const studentType = defineType({
     }),
     defineField({
       name: "clerkId",
-      title: "Clerk User ID",
+      title: "ID de Usuário",
       type: "string",
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: "imageUrl",
-      title: "Profile Image URL",
+      title: "URL da Imagem do Perfil",
       type: "url",
     }),
   ],

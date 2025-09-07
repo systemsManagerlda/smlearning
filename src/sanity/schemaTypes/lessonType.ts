@@ -2,12 +2,12 @@ import { defineField, defineType } from "sanity";
 
 export const lessonType = defineType({
   name: "lesson",
-  title: "Lesson",
+  title: "Lição",
   type: "document",
   fields: [
     defineField({
       name: "title",
-      title: "Title",
+      title: "Título",
       type: "string",
       validation: (rule) => rule.required(),
     }),
@@ -23,21 +23,21 @@ export const lessonType = defineType({
     }),
     defineField({
       name: "description",
-      title: "Description",
+      title: "Descrição",
       type: "text",
     }),
     defineField({
       name: "videoUrl",
-      title: "Video URL",
+      title: "URL do vídeo",
       type: "url",
-      description: "The URL for the video player (e.g. YouTube, Vimeo)",
+      description: "A URL do player de vídeo (por exemplo, YouTube, Vimeo)",
     }),
     defineField({
       name: "loomUrl",
       title: "Loom Share URL",
       type: "url",
       description:
-        "The full Loom share URL (e.g., https://www.loom.com/share/...)",
+        "O URL completo de compartilhamento do Loom (por exemplo, https://www.loom.com/share/...)",
       validation: (rule) =>
         rule.custom((value) => {
           if (!value) return true; // Allow empty value
@@ -61,7 +61,7 @@ export const lessonType = defineType({
     }),
     defineField({
       name: "content",
-      title: "Content",
+      title: "Conteúdo",
       type: "array",
       of: [{ type: "block" }],
     }),

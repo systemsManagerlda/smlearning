@@ -10,9 +10,9 @@ import { structureTool } from "sanity/structure";
 
 // Go to https://www.sanity.io/docs/api-versioning to learn how API versioning works
 import { presentationTool } from "sanity/presentation";
-import { schema } from "@/sanity/schemaTypes";
-import { apiVersion, dataset, projectId } from "@/sanity/env";
-import { structure } from "@/sanity/structure";
+import { schema } from "./src/sanity/schemaTypes";
+import { apiVersion, dataset, projectId } from "./src/sanity/env";
+import { structure } from "./src/sanity/structure";
 
 export default defineConfig({
   basePath: "/studio",

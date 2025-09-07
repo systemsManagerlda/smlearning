@@ -3,30 +3,30 @@ import { StructureBuilder } from "sanity/structure";
 // https://www.sanity.io/docs/structure-builder-cheat-sheet
 export const structure = (S: StructureBuilder) =>
   S.list()
-    .title("Admin Dashboard")
+    .title("Painel de Administração")
     .items([
       // Course Content
       S.listItem()
-        .title("Course Content")
+        .title("Conteúdo do Curso")
         .child(
           S.documentTypeList("course")
-            .title("Courses")
+            .title("Cursos")
             .child((courseId) =>
               S.list()
-                .title("Course Options")
+                .title("Opções de Curso")
                 .items([
                   // Option to edit course content
                   S.listItem()
-                    .title("Edit Course Content")
+                    .title("Editar o Conteúdo do Curso")
                     .child(
                       S.document().schemaType("course").documentId(courseId)
                     ),
                   // Option to view course enrollments
                   S.listItem()
-                    .title("View Students")
+                    .title("Ver Alunos")
                     .child(
                       S.documentList()
-                        .title("Course Enrollments")
+                        .title("Inscrições em Cursos")
                         .filter(
                           '_type == "enrollment" && course._ref == $courseId'
                         )
@@ -40,25 +40,25 @@ export const structure = (S: StructureBuilder) =>
 
       // Users
       S.listItem()
-        .title("User Management")
+        .title("Gerenciamento de Usuários")
         .child(
           S.list()
-            .title("Select a Type of User")
+            .title("Selecione um Tipo de Usuário")
             .items([
               // Instructors with options
               S.listItem()
-                .title("Instructors")
+                .title("Instrutores")
                 .schemaType("instructor")
                 .child(
                   S.documentTypeList("instructor")
-                    .title("Instructors")
+                    .title("Instrutores")
                     .child((instructorId) =>
                       S.list()
-                        .title("Instructor Options")
+                        .title("Opções do Instrutor")
                         .items([
                           // Option to edit instructor details
                           S.listItem()
-                            .title("Edit Instructor Details")
+                            .title("Editar Detalhes do Instrutor")
                             .child(
                               S.document()
                                 .schemaType("instructor")
@@ -66,10 +66,10 @@ export const structure = (S: StructureBuilder) =>
                             ),
                           // Option to view instructor's courses
                           S.listItem()
-                            .title("View Courses")
+                            .title("Ver Cursos")
                             .child(
                               S.documentList()
-                                .title("Instructor's Courses")
+                                .title("Cursos de Instrutores")
                                 .filter(
                                   '_type == "course" && instructor._ref == $instructorId'
                                 )
@@ -80,18 +80,18 @@ export const structure = (S: StructureBuilder) =>
                 ),
               // Students with options
               S.listItem()
-                .title("Students")
+                .title("Alunos")
                 .schemaType("student")
                 .child(
                   S.documentTypeList("student")
-                    .title("Students")
+                    .title("Alunos")
                     .child((studentId) =>
                       S.list()
-                        .title("Student Options")
+                        .title("Opções Para Alunos")
                         .items([
                           // Option to edit student details
                           S.listItem()
-                            .title("Edit Student Details")
+                            .title("Editar Detalhes do Aluno")
                             .child(
                               S.document()
                                 .schemaType("student")
@@ -99,10 +99,10 @@ export const structure = (S: StructureBuilder) =>
                             ),
                           // Option to view enrollments
                           S.listItem()
-                            .title("View Enrollments")
+                            .title("Ver Inscrições")
                             .child(
                               S.documentList()
-                                .title("Student Enrollments")
+                                .title("Matrículas de Alunos")
                                 .filter(
                                   '_type == "enrollment" && student._ref == $studentId'
                                 )
@@ -110,10 +110,10 @@ export const structure = (S: StructureBuilder) =>
                             ),
                           // Option to view completed lessons
                           S.listItem()
-                            .title("View Completed Lessons")
+                            .title("Ver Lições Concluídas")
                             .child(
                               S.documentList()
-                                .title("Completed Lessons")
+                                .title("Lições Concluídas")
                                 .schemaType("lessonCompletion")
                                 .filter(
                                   '_type == "lessonCompletion" && student._ref == $studentId'
@@ -133,10 +133,10 @@ export const structure = (S: StructureBuilder) =>
 
       // System Management
       S.listItem()
-        .title("System Management")
+        .title("Gerenciamento do Sistema")
         .child(
           S.list()
-            .title("System Management")
-            .items([S.documentTypeListItem("category").title("Categories")])
+            .title("Gerenciamento do Sistema")
+            .items([S.documentTypeListItem("category").title("Categorias")])
         ),
     ]);

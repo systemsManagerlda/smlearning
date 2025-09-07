@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "../../components/Header";
 import { SanityLive } from "@/sanity/lib/live";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 export const metadata: Metadata = {
@@ -20,6 +22,7 @@ export default function UserLayout({
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-1">{children}</main>
+        <ToastContainer />
       </div>
       <SanityLive />
     </ClerkProvider>

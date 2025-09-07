@@ -3,7 +3,7 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 
 export const postType = defineType({
   name: 'post',
-  title: 'Post',
+  title: 'Publicar',
   type: 'document',
   icon: DocumentTextIcon,
   fields: [
@@ -59,7 +59,7 @@ export const postType = defineType({
     },
     prepare(selection) {
       const {author} = selection
-      return {...selection, subtitle: author && `by ${author}`}
+      return {...selection, subtitle: author && `por ${author}`}
     },
   },
 })

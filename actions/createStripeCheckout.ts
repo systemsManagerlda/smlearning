@@ -1,20 +1,20 @@
 "use server";
-
-import stripe from "@/lib/stripe";
-import { urlFor } from "@/sanity/lib/image";
 import getCourseById from "@/sanity/lib/courses/getCourseById";
 import { createStudentIfNotExists } from "@/sanity/lib/student/createStudentIfNotExists";
 import { clerkClient } from "@clerk/nextjs/server";
 import baseUrl from "@/lib/baseUrl";
+import { v4 as uuidv4 } from "uuid";
 import { createEnrollment } from "@/sanity/lib/student/createEnrollment";
+import { getStudentByClerkId } from "@/sanity/lib/student/getStudentByClerkId";
 
-export async function createStripeCheckout(courseId: string, userId: string) {
+export async function createPaymentSession(courseId: string, userId: string) {
   try {
-    // 1. Query course details from Sanity
+    // 1. Buscar detalhes do curso no Sanity
     const course = await getCourseById(courseId);
     const clerkUser = await (await clerkClient()).users.getUser(userId);
     const { emailAddresses, firstName, lastName, imageUrl } = clerkUser;
     const email = emailAddresses[0]?.emailAddress;
+    console.log(clerkUser.id);
 
     if (!emailAddresses || !email) {
       throw new Error("User details not found");
@@ -24,7 +24,8 @@ export async function createStripeCheckout(courseId: string, userId: string) {
       throw new Error("Course not found");
     }
 
-    // mid step - create a user in sanity if it doesn't exist
+    // Criar usuário no Sanity se não existir
+
     const user = await createStudentIfNotExists({
       clerkId: userId,
       email: email || "",
@@ -37,14 +38,8 @@ export async function createStripeCheckout(courseId: string, userId: string) {
       throw new Error("User not found");
     }
 
-    // 2. Validate course data and prepare price for Stripe
-    if (!course.price && course.price !== 0) {
-      throw new Error("Course price is not set");
-    }
-    const priceInCents = Math.round(course.price * 100);
-
-    // if course is free, create enrollment and redirect to course page (BYPASS STRIPE CHECKOUT)
-    if (priceInCents === 0) {
+    // Se curso for gratuito, cria matrícula e retorna URL do curso
+    if (!course.price || course.price === 0) {
       await createEnrollment({
         studentId: user._id,
         courseId: course._id,
@@ -61,35 +56,65 @@ export async function createStripeCheckout(courseId: string, userId: string) {
       throw new Error("Course data is incomplete");
     }
 
-    // 3. Create and configure Stripe Checkout Session with course details
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: title,
-              description: description,
-              images: [urlFor(image).url() || ""],
-            },
-            unit_amount: priceInCents,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${baseUrl}/courses/${slug.current}`,
-      cancel_url: `${baseUrl}/courses/${slug.current}?canceled=true`,
+    // Criar pagamento no Paysuite
+    const url = "https://paysuite.tech/api/v1/payments";
+
+    const headers = {
+      Authorization: `Bearer 580|Gk0EFM0exjyZELotnAtIEECm5zcK2wKja8GXAgig12dfb3bc`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+
+    const safeReference = uuidv4().replace(/-/g, "");
+    const student = await getStudentByClerkId(userId);
+
+    const body = {
+      amount: `${course.price}`,
+      reference: safeReference,
+      description: `${course.title}`,
+      return_url: `${baseUrl}/courses/${slug.current}`,
+      callback_url: `${baseUrl}/api/webhook`,
       metadata: {
         courseId: course._id,
         userId: userId,
+        coursePrice: course.price,
+        sanityStudentId: user._id,
       },
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
     });
 
-    // 4. Return checkout session URL for client redirect
-    return { url: session.url };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erro ao processar pagamento");
+    }
+
+    const data = await response.json();
+
+    if (!data.data || !data.data.checkout_url) {
+      throw new Error("URL de checkout não recebida");
+    }
+
+    // **Não usar window aqui!** Retornamos apenas a URL para o client abrir
+    
+    const preco = course.price;
+    const clerkUserID = student.data?._id;
+    const checkoutUrl = data.data.checkout_url;
+    const paymentId = checkoutUrl.split("/").pop(); // extrai UUID
+
+    return {
+      checkoutUrl,
+      paymentId,
+      courseSlug: slug.current,
+      preco,
+      clerkUserID,
+    };
   } catch (error) {
-    console.error("Error in createStripeCheckout:", error);
-    throw new Error("Failed to create checkout session");
+    console.error("Error in createPaymentSession:", error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 }

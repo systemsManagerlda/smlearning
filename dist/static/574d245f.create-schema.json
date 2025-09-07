@@ -99,7 +99,8 @@
       }
     ],
     "name": "blockContent",
-    "type": "array"
+    "type": "array",
+    "title": "Bloco de Conteúdo"
   },
   {
     "fields": [
@@ -130,7 +131,8 @@
       }
     ],
     "name": "category",
-    "type": "document"
+    "type": "document",
+    "title": "Categoria"
   },
   {
     "fields": [
@@ -187,7 +189,7 @@
               }
             ],
             "type": "reference",
-            "title": "Reference to category"
+            "title": "Reference to categoria"
           }
         ],
         "name": "categories",
@@ -203,7 +205,8 @@
       }
     ],
     "name": "post",
-    "type": "document"
+    "type": "document",
+    "title": "Publicar"
   },
   {
     "fields": [
@@ -320,17 +323,20 @@
       }
     ],
     "name": "author",
-    "type": "document"
+    "type": "document",
+    "title": "Autor"
   },
   {
     "fields": [
       {
         "name": "firstName",
-        "type": "string"
+        "type": "string",
+        "title": "Primeiro Nome"
       },
       {
         "name": "lastName",
-        "type": "string"
+        "type": "string",
+        "title": "Sobrenome"
       },
       {
         "validation": [
@@ -361,7 +367,7 @@
         ],
         "name": "clerkId",
         "type": "string",
-        "title": "Clerk User ID"
+        "title": "ID de Usuário"
       },
       {
         "validation": [
@@ -387,11 +393,12 @@
         ],
         "name": "imageUrl",
         "type": "url",
-        "title": "Profile Image URL"
+        "title": "URL da Imagem do Perfil"
       }
     ],
     "name": "student",
-    "type": "document"
+    "type": "document",
+    "title": "Aluno"
   },
   {
     "fields": [
@@ -503,7 +510,7 @@
               }
             ],
             "type": "reference",
-            "title": "Reference to module"
+            "title": "Reference to módulo"
           }
         ],
         "name": "modules",
@@ -657,7 +664,7 @@
     ],
     "name": "blockContent1",
     "type": "array",
-    "title": "Content"
+    "title": "Conteúdo"
   },
   {
     "fields": [
@@ -679,7 +686,8 @@
           }
         ],
         "name": "student",
-        "type": "reference"
+        "type": "reference",
+        "title": "Aluno"
       },
       {
         "validation": [
@@ -699,7 +707,8 @@
           }
         ],
         "name": "course",
-        "type": "reference"
+        "type": "reference",
+        "title": "Curso"
       },
       {
         "validation": [
@@ -717,9 +726,10 @@
             "level": "error"
           }
         ],
-        "description": "The amount paid for the course enrollment in cents",
+        "description": "O valor a ser pago pela inscrição no curso...",
         "name": "amount",
-        "type": "number"
+        "type": "number",
+        "title": "Preço"
       },
       {
         "validation": [
@@ -733,18 +743,20 @@
             "level": "error"
           }
         ],
-        "description": "The Stripe payment/checkout session ID",
+        "description": "O ID da sessão de pagamento/checkout",
         "name": "paymentId",
         "type": "string",
-        "title": "Payment ID"
+        "title": "ID de pagamento"
       },
       {
         "name": "enrolledAt",
-        "type": "datetime"
+        "type": "datetime",
+        "title": "Inscrito em"
       }
     ],
     "name": "enrollment",
-    "type": "document"
+    "type": "document",
+    "title": "Inscrição"
   },
   {
     "fields": [
@@ -766,7 +778,8 @@
           }
         ],
         "name": "student",
-        "type": "reference"
+        "type": "reference",
+        "title": "Aluno"
       },
       {
         "validation": [
@@ -786,7 +799,8 @@
           }
         ],
         "name": "lesson",
-        "type": "reference"
+        "type": "reference",
+        "title": "Lição"
       },
       {
         "validation": [
@@ -806,7 +820,8 @@
           }
         ],
         "name": "module",
-        "type": "reference"
+        "type": "reference",
+        "title": "Módulo"
       },
       {
         "validation": [
@@ -826,7 +841,8 @@
           }
         ],
         "name": "course",
-        "type": "reference"
+        "type": "reference",
+        "title": "Curso"
       },
       {
         "validation": [
@@ -841,11 +857,13 @@
           }
         ],
         "name": "completedAt",
-        "type": "datetime"
+        "type": "datetime",
+        "title": "Concluído em"
       }
     ],
     "name": "lessonCompletion",
-    "type": "document"
+    "type": "document",
+    "title": "Conclusão da Lição"
   },
   {
     "fields": [
@@ -863,7 +881,7 @@
         ],
         "name": "title",
         "type": "string",
-        "title": "Module Title"
+        "title": "Título do Módulo"
       },
       {
         "of": [
@@ -874,15 +892,17 @@
               }
             ],
             "type": "reference",
-            "title": "Reference to lesson"
+            "title": "Reference to lição"
           }
         ],
         "name": "lessons",
-        "type": "array"
+        "type": "array",
+        "title": "Lições"
       }
     ],
     "name": "module",
-    "type": "document"
+    "type": "document",
+    "title": "Módulo"
   },
   {
     "fields": [
@@ -899,7 +919,8 @@
           }
         ],
         "name": "title",
-        "type": "string"
+        "type": "string",
+        "title": "Título"
       },
       {
         "options": {
@@ -925,7 +946,8 @@
       },
       {
         "name": "description",
-        "type": "text"
+        "type": "text",
+        "title": "Descrição"
       },
       {
         "validation": [
@@ -949,10 +971,10 @@
             "level": "error"
           }
         ],
-        "description": "The URL for the video player (e.g. YouTube, Vimeo)",
+        "description": "A URL do player de vídeo (por exemplo, YouTube, Vimeo)",
         "name": "videoUrl",
         "type": "url",
-        "title": "Video URL"
+        "title": "URL do vídeo"
       },
       {
         "validation": [
@@ -979,7 +1001,7 @@
             "level": "error"
           }
         ],
-        "description": "The full Loom share URL (e.g., https://www.loom.com/share/...)",
+        "description": "O URL completo de compartilhamento do Loom (por exemplo, https://www.loom.com/share/...)",
         "name": "loomUrl",
         "type": "url",
         "title": "Loom Share URL"
@@ -1103,11 +1125,13 @@
           }
         ],
         "name": "content",
-        "type": "array"
+        "type": "array",
+        "title": "Conteúdo"
       }
     ],
     "name": "lesson",
-    "type": "document"
+    "type": "document",
+    "title": "Lição"
   },
   {
     "fields": [
@@ -1124,18 +1148,22 @@
           }
         ],
         "name": "name",
-        "type": "string"
+        "type": "string",
+        "title": "Nome"
       },
       {
         "name": "bio",
-        "type": "text"
+        "type": "text",
+        "title": "Biografia"
       },
       {
         "name": "photo",
-        "type": "image"
+        "type": "image",
+        "title": "Foto"
       }
     ],
     "name": "instructor",
-    "type": "document"
+    "type": "document",
+    "title": "Instrutor"
   }
 ]

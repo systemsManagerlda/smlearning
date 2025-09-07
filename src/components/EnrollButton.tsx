@@ -3,9 +3,10 @@
 import { useUser } from "@clerk/nextjs";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { createStripeCheckout } from "../../actions/createStripeCheckout";
+import { createPaymentSession } from "../../actions/createStripeCheckout";
+import { toast } from "react-toastify";
 function EnrollButton({
   courseId,
   isEnrolled,
@@ -14,7 +15,7 @@ function EnrollButton({
   isEnrolled: boolean;
 }) {
   const { user, isLoaded: isUserLoaded } = useUser();
-  const router = useRouter();
+  // const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleEnroll = async (courseId: string) => {
@@ -22,14 +23,73 @@ function EnrollButton({
       try {
         const userId = user?.id;
         if (!userId) return;
+        const result = await createPaymentSession(courseId, userId); 
 
-        const { url } = await createStripeCheckout(courseId, userId);
-        if (url) {
-          router.push(url);
+        // Cria sessão de pagamento no server
+        // const { checkoutUrl, paymentId } =
+        //   await createPaymentSession(courseId, userId);
+
+        // if (!checkoutUrl || !paymentId) {
+        //   throw new Error("Checkout URL ou Payment ID não recebidos");
+        // }
+
+        // Armazena os dados no localStorage
+      if (result.checkoutUrl && result.paymentId) {
+        localStorage.setItem('paymentData', JSON.stringify({
+          preco: result.preco,
+          clerkUserID: result.clerkUserID,
+          checkoutUrl: result.checkoutUrl,
+          paymentId: result.paymentId,
+          courseSlug: result.courseSlug,
+          timestamp: Date.now()
+        }));
+
+        // Redireciona para o checkout
+        window.location.href = result.checkoutUrl;
+      }
+
+        // Abre checkout numa nova aba
+        const checkoutWindow = window.open(result.checkoutUrl, "_blank");
+
+        if (!checkoutWindow) {
+          toast.error(
+            `Não foi possível abrir a janela de pagamento. Verifique se o bloqueador de popups está ativo..`,
+            {
+              position: "top-right",
+              autoClose: 5000,
+              theme: "dark",
+            }
+          );
+          return;
         }
+        // Timeout máximo de 1 minuto
+        const timeout = setTimeout(
+          () => {
+            // clearInterval(interval);
+
+            if (checkoutWindow && !checkoutWindow.closed) {
+              checkoutWindow.close();
+            }
+
+            toast.error(
+              `O pagamento não foi realizado dentro do tempo estimado. Tente novamente.`,
+              {
+                position: "top-right",
+                autoClose: 5000,
+                theme: "dark",
+              }
+            );
+          },
+          1 * 60 * 1000
+        ); // 1 minuto
+        console.log(timeout);
       } catch (error) {
         console.error("Error in handleEnroll:", error);
-        throw new Error("Failed to create checkout session");
+        toast.error(`Falha ao criar sessão de checkout. Tente novamente.`, {
+          position: "top-right",
+          autoClose: 5000,
+          theme: "dark",
+        });
       }
     });
   };

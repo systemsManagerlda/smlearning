@@ -2,23 +2,23 @@ import { defineField, defineType } from "sanity";
 
 export const instructorType = defineType({
   name: "instructor",
-  title: "Instructor",
+  title: "Instrutor",
   type: "document",
   fields: [
     defineField({
       name: "name",
-      title: "Name",
+      title: "Nome",
       type: "string",
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: "bio",
-      title: "Bio",
+      title: "Biografia",
       type: "text",
     }),
     defineField({
       name: "photo",
-      title: "Photo",
+      title: "Foto",
       type: "image",
     }),
   ],
