@@ -4,9 +4,12 @@ import { useUser } from "@clerk/nextjs";
 import { CheckCircle } from "lucide-react";
 import Link from "next/link";
 // import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createPaymentSession } from "../../actions/createStripeCheckout";
 import { toast } from "react-toastify";
+import { createEnrollment } from "@/sanity/lib/student/createEnrollment";
+import { getStudentByClerkId } from "@/sanity/lib/student/getStudentByClerkId";
+import getCourseById from "@/sanity/lib/courses/getCourseById";
 function EnrollButton({
   courseId,
   isEnrolled,
@@ -15,40 +18,80 @@ function EnrollButton({
   isEnrolled: boolean;
 }) {
   const { user, isLoaded: isUserLoaded } = useUser();
+  const userId = user?.id;
   // const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [idPagamento, setIdPagamento] = useState("");
+  useEffect(() => {
+    const executePaymentRequest = async () => {
+      try {
+        const url = new URL(
+          `https://paysuite.tech/api/v1/payments/${idPagamento}`
+        );
+
+        const headers = {
+          Authorization:
+            "Bearer 580|Gk0EFM0exjyZELotnAtIEECm5zcK2wKja8GXAgig12dfb3bc",
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers,
+        });
+
+        const data = await response.json();
+        console.log(data);
+        if (data.data.transaction) {
+          if (data.data.transaction.status === "completed") {
+            // Encontrar o estudante
+            if (!userId) {
+              throw new Error("UserId não encontrado.");
+            }
+            const student = await getStudentByClerkId(userId);
+            const course = await getCourseById(courseId);
+            if (!course) {
+              throw new Error("UserId não encontrado.");
+            }
+
+            if (!student || !student.data) {
+              return;
+            }
+            await createEnrollment({
+              studentId: student.data._id,
+              courseId: course._id,
+              paymentId: idPagamento,
+              amount: Number(course.price),
+            });
+          } else {
+            toast.error(`Pagamento não finalizado!!!`, {
+              position: "top-right",
+              autoClose: 5000,
+              theme: "dark",
+            });
+          }
+        } else {
+          toast.error(`Não foi possivel processar o seu pagamento...`, {
+            position: "top-right",
+            autoClose: 5000,
+            theme: "dark",
+          });
+        }
+      } catch (error) {
+        console.error("Erro na requisição:", error);
+      }
+    };
+
+    // Executar após 1 minuto
+    setTimeout(executePaymentRequest, 60000);
+  }, [courseId, idPagamento, userId]);
 
   const handleEnroll = async (courseId: string) => {
     startTransition(async () => {
       try {
-        const userId = user?.id;
         if (!userId) return;
-        const result = await createPaymentSession(courseId, userId); 
-
-        // Cria sessão de pagamento no server
-        // const { checkoutUrl, paymentId } =
-        //   await createPaymentSession(courseId, userId);
-
-        // if (!checkoutUrl || !paymentId) {
-        //   throw new Error("Checkout URL ou Payment ID não recebidos");
-        // }
-
-        // Armazena os dados no localStorage
-      if (result.checkoutUrl && result.paymentId) {
-        localStorage.setItem('paymentData', JSON.stringify({
-          preco: result.preco,
-          clerkUserID: result.clerkUserID,
-          checkoutUrl: result.checkoutUrl,
-          paymentId: result.paymentId,
-          courseSlug: result.courseSlug,
-          timestamp: Date.now()
-        }));
-
-        // Redireciona para o checkout
-        window.location.href = result.checkoutUrl;
-      }
-
-        // Abre checkout numa nova aba
+        const result = await createPaymentSession(courseId, userId);
         const checkoutWindow = window.open(result.checkoutUrl, "_blank");
 
         if (!checkoutWindow) {
@@ -62,27 +105,19 @@ function EnrollButton({
           );
           return;
         }
-        // Timeout máximo de 1 minuto
-        const timeout = setTimeout(
-          () => {
-            // clearInterval(interval);
+        setIdPagamento(result.paymentId);
 
-            if (checkoutWindow && !checkoutWindow.closed) {
-              checkoutWindow.close();
-            }
-
-            toast.error(
-              `O pagamento não foi realizado dentro do tempo estimado. Tente novamente.`,
-              {
-                position: "top-right",
-                autoClose: 5000,
-                theme: "dark",
-              }
-            );
-          },
-          1 * 60 * 1000
-        ); // 1 minuto
-        console.log(timeout);
+        // Fechar a janela após 1 minuto (60000 milissegundos)
+        setTimeout(() => {
+          if (checkoutWindow && !checkoutWindow.closed) {
+            checkoutWindow.close();
+            toast.info(`Tempo normal de pagamento escedido!!!`, {
+              position: "top-right",
+              autoClose: 5000,
+              theme: "dark",
+            });
+          }
+        }, 60000); // 60 segundos = 60000 ms
       } catch (error) {
         console.error("Error in handleEnroll:", error);
         toast.error(`Falha ao criar sessão de checkout. Tente novamente.`, {
