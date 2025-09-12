@@ -1,142 +1,65 @@
-// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { createEnrollment } from "@/sanity/lib/student/createEnrollment";
-import { getStudentByClerkId } from "@/sanity/lib/student/getStudentByClerkId";
 
-export async function POST(request: NextRequest) {
+const PAYSUITE_WEBHOOK_SECRET =
+  process.env.PAYSUITE_WEBHOOK_SECRET ||
+  "whsec_7f2127e9745c43fe3bc103f4397bcd5315a215f886d53fc8";
+
+export async function POST(req: NextRequest) {
   try {
-    // Obter parâmetros da URL
-    const url = new URL(request.url);
-    const courseId = url.searchParams.get('courseId');
-    const userId = url.searchParams.get('userId');
+    // 1. Obter payload cru (string)
+    const rawBody = await req.text();
 
-    // Debug: mostrar todos os headers
-    const headers = Object.fromEntries(request.headers);
-    console.log("=== TODOS OS HEADERS RECEBIDOS ===");
-    Object.entries(headers).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`);
-    });
-
-    // Verificação de assinatura (seu código existente)
-    const possibleSignatureHeaders = [
-      "x-webhook-signature",
-      "X-Webhook-Signature",
-      "X-WEBHOOK-SIGNATURE",
-      "signature",
-      "Signature",
-      "x-signature",
-      "X-Signature",
-    ];
-
-    let signature: string | null = null;
-
-    for (const headerName of possibleSignatureHeaders) {
-      const value = request.headers.get(headerName);
-      if (value) {
-        signature = value;
-        console.log(`Assinatura encontrada no header: ${headerName}`);
-        break;
-      }
-    }
-
-    console.log("Assinatura:", signature);
-
+    // 2. Capturar assinatura do header
+    const signature = req.headers.get("x-webhook-signature");
+    console.log("Assinatura", signature);
     if (!signature) {
-      return NextResponse.json(
-        {
-          error: "Missing signature",
-          help: "Adicione o header x-webhook-signature na requisição",
-          receivedHeaders: headers,
-        },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    const payload = await request.text();
-    console.log("Payload:", payload);
-
-    // Verificação da assinatura
-    const secret = process.env.WEBHOOK_SECRET || "whsec_34e66f8d5e4b92289b9f5c9572d7d967f591aeec4b0cc03c";
-    const calculatedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
+    // 3. Calcular HMAC-SHA256
+    const computed = crypto
+      .createHmac("sha256", PAYSUITE_WEBHOOK_SECRET)
+      .update(rawBody)
       .digest("hex");
 
-    console.log("Assinatura calculada:", calculatedSignature);
-
-    if (signature !== calculatedSignature) {
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 401 }
-      );
+    // 4. Verificar se bate
+    if (computed !== signature) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    // Parse do payload
-    const webhookData = JSON.parse(payload);
-    console.log("Dados do webhook:", webhookData);
+    // 5. Assinatura válida → processar evento
+    const event = JSON.parse(rawBody);
 
-    // Extrair dados do webhook
-    const session = webhookData.data; // Ajuste conforme a estrutura do Paysuite
-    const paymentId = session.id;
-    const amount = session.amount_total / 100; // Converter de centavos
+    switch (event.event) {
+      case "payment.success":
+        console.log("✅ Pagamento bem-sucedido:", event.data);
 
-    // Obter metadados do pagamento
-    const metadata = session.metadata || {};
-    const metadataCourseId = metadata.courseId || courseId;
-    const metadataUserId = metadata.userId || userId;
-    const metadataSanityStudentId = metadata.sanityStudentId;
+        // Aqui você pode salvar no banco, atualizar fatura, etc.
+        return NextResponse.json({
+          event: "payment.success",
+          data: event.data,
+          created_at: event.created_at,
+          request_id: event.request_id,
+        });
 
-    if (!metadataCourseId || !metadataUserId) {
-      return NextResponse.json(
-        { error: "Missing courseId or userId in metadata" },
-        { status: 400 }
-      );
+      case "payment.failed":
+        console.log("❌ Pagamento falhou:", event.data);
+
+        // Exemplo: salvar falha no banco, alertar cliente, etc.
+        return NextResponse.json({
+          event: "payment.failed",
+          data: event.data,
+          created_at: event.created_at,
+          request_id: event.request_id,
+        });
+
+      default:
+        console.log("ℹ️ Evento desconhecido:", event.event);
+        return NextResponse.json({ received: true });
     }
-
-    // Encontrar o estudante
-    let student;
-    if (metadataSanityStudentId) {
-      // Usar ID do Sanity se disponível nos metadados
-      student = { data: { _id: metadataSanityStudentId } };
-    } else {
-      // Buscar pelo Clerk ID como fallback
-      student = await getStudentByClerkId(metadataUserId);
-    }
-
-    if (!student || !student.data) {
-      return NextResponse.json(
-        { error: "Student not found" },
-        { status: 404 }
-      );
-    }
-
-    // Criar matrícula
-    await createEnrollment({
-      studentId: student.data._id,
-      courseId: metadataCourseId,
-      paymentId: paymentId,
-      amount: amount,
-    });
-
-    console.log("Matrícula criada com sucesso!");
-
-    return NextResponse.json({
-      success: true,
-      message: "Webhook processado e matrícula criada!",
-      data: {
-        courseId: metadataCourseId,
-        studentId: student.data._id,
-        paymentId: paymentId,
-        amount: amount
-      }
-    });
-
-  } catch (error) {
-    console.error("Erro no webhook:", error);
-    return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Erro no webhook:", err);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

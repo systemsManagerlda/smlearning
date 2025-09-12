@@ -42,7 +42,6 @@ function EnrollButton({
         });
 
         const data = await response.json();
-        console.log(data);
         if (data.data.transaction) {
           if (data.data.transaction.status === "completed") {
             // Encontrar o estudante

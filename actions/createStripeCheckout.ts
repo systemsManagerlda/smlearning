@@ -14,7 +14,6 @@ export async function createPaymentSession(courseId: string, userId: string) {
     const clerkUser = await (await clerkClient()).users.getUser(userId);
     const { emailAddresses, firstName, lastName, imageUrl } = clerkUser;
     const email = emailAddresses[0]?.emailAddress;
-    console.log(clerkUser.id);
 
     if (!emailAddresses || !email) {
       throw new Error("User details not found");
