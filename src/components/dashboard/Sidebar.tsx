@@ -111,8 +111,9 @@ export function Sidebar({ course, completedLessons = [] }: SidebarProps) {
           />
         </div>
       </div>
-      {/* CORREÇÃO PRINCIPAL: Adicionando altura fixa ao ScrollArea */}
-      <div className="flex-1 overflow-hidden">
+      
+      {/* CORREÇÃO PRINCIPAL: Altura fixa para o conteúdo rolável */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-2 lg:p-4">
             <Accordion
@@ -205,6 +206,9 @@ export function Sidebar({ course, completedLessons = [] }: SidebarProps) {
           </div>
         </ScrollArea>
       </div>
+      
+      {/* Adicionando espaço para o rodapé se necessário */}
+      <div className="h-0 lg:h-16"></div>
     </div>
   );
 
@@ -259,7 +263,7 @@ export function Sidebar({ course, completedLessons = [] }: SidebarProps) {
             : "translate-x-[-100%] lg:translate-x-0"
         )}
       >
-        <div className="h-full">
+        <div className="h-full flex flex-col">
           <SidebarContent />
         </div>
       </aside>
